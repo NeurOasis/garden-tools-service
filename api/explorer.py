@@ -1,9 +1,8 @@
-"""
-GARDEN Explorer API - Secured Version
-Graph navigation and structure analysis for GARDEN ecosystem
-"""
+"""GARDEN Explorer API - Secured Version"""
 import json
-from _auth import require_api_key, create_response
+import os
+
+GARDEN_API_KEY = os.environ.get('GARDEN_API_KEY')
 
 # Mock data representing GARDEN structure
 GARDEN_STRUCTURE = {
@@ -17,64 +16,49 @@ GARDEN_STRUCTURE = {
             "type": "directory", 
             "description": "GARDEN tools and utilities",
             "children": ["nodepad", "uploader", "explorer", "sunflower"]
-        },
-        "users": {
-            "type": "entity",
-            "description": "GARDEN community members",
-            "instances": ["Scott", "Dan", "Andrew", "Melissa"]
         }
     },
     "relationships": [
         {"from": "Scott", "to": "nodepad", "type": "CREATED"},
-        {"from": "Dan", "to": "CIT_Framework", "type": "PIONEERED"},
         {"from": "nodepad", "to": "contexts", "type": "USES"}
     ]
 }
 
-@require_api_key
-def handler(request):
-    """
-    Handle Explorer API requests with authentication
-    """
+def handler(request, response):
+    """Handle Explorer API requests"""
+    # Check API key
+    api_key = request.headers.get('x-api-key')
+    
+    if request.method == 'OPTIONS':
+        response.status_code = 200
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-API-Key'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        return
+    
+    if not api_key or api_key != GARDEN_API_KEY:
+        response.status_code = 401
+        return json.dumps({"error": "Unauthorized", "message": "Valid API key required"})
+    
     try:
-        # Parse request body
         body = json.loads(request.body) if request.body else {}
         query_type = body.get('type', 'schema')
         
         if query_type == 'schema':
-            # Return overall structure
             result = {
                 "schema": {
                     "nodes": list(GARDEN_STRUCTURE["nodes"].keys()),
                     "relationships": ["CREATED", "USES", "DEPENDS_ON", "FORKED_FROM"]
                 }
             }
-        
-        elif query_type == 'node':
-            # Return specific node info
-            node_name = body.get('node')
-            if node_name in GARDEN_STRUCTURE["nodes"]:
-                result = {
-                    "node": node_name,
-                    "data": GARDEN_STRUCTURE["nodes"][node_name]
-                }
-            else:
-                return create_response({"error": "Node not found"}, 404)
-        
-        elif query_type == 'relationships':
-            # Return relationships
-            node_name = body.get('node')
-            if node_name:
-                related = [r for r in GARDEN_STRUCTURE["relationships"] 
-                          if r["from"] == node_name or r["to"] == node_name]
-                result = {"relationships": related}
-            else:
-                result = {"relationships": GARDEN_STRUCTURE["relationships"]}
-        
         else:
-            return create_response({"error": "Invalid query type"}, 400)
+            result = {"message": "Query type not implemented"}
             
-        return create_response(result)
+        response.status_code = 200
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return json.dumps(result)
         
     except Exception as e:
-        return create_response({"error": str(e)}, 500)
+        response.status_code = 500
+        return json.dumps({"error": str(e)})

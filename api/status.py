@@ -1,16 +1,13 @@
-"""
-GARDEN Tools Service Status API
-Public health check endpoint (no auth required)
-"""
+"""GARDEN Tools Service Status API"""
 import json
-from _auth import create_response
 
-def handler(request):
-    """
-    Public status endpoint for health checks
-    No authentication required
-    """
-    return create_response({
+def handler(request, response):
+    """Public status endpoint"""
+    response.status_code = 200
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    
+    return json.dumps({
         "status": "healthy",
         "service": "GARDEN Tools Service",
         "version": "1.0.0",
@@ -18,6 +15,5 @@ def handler(request):
             "/api/explorer": "Graph navigation (requires API key)",
             "/api/sunflower": "Pattern detection (requires API key)",
             "/api/status": "Health check (public)"
-        },
-        "authentication": "API key required in X-API-Key header"
+        }
     })
