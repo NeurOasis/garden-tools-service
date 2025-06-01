@@ -1,49 +1,64 @@
-"""GARDEN Sunflower API - Secured Version"""
+from http.server import BaseHTTPRequestHandler
 import json
 import os
 
-GARDEN_API_KEY = os.environ.get('GARDEN_API_KEY')
-
-PATTERNS = {
-    "tool_cluster": {
-        "name": "Tool Cluster",
-        "description": "Groups of tools frequently used together"
-    },
-    "user_journey": {
-        "name": "User Journey",
-        "description": "Common paths through GARDEN tools"
-    }
-}
-
-def handler(request, response):
-    """Handle Sunflower API requests"""
-    # Check API key
-    api_key = request.headers.get('x-api-key')
-    
-    if request.method == 'OPTIONS':
-        response.status_code = 200
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-API-Key'
+class handler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-API-Key')
+        self.end_headers()
         return
-    
-    if not api_key or api_key != GARDEN_API_KEY:
-        response.status_code = 401
-        return json.dumps({"error": "Unauthorized"})
-    
-    try:
-        body = json.loads(request.body) if request.body else {}
-        pattern_type = body.get('pattern')
+
+    def do_POST(self):
+        # Get API key from environment
+        GARDEN_API_KEY = os.environ.get('GARDEN_API_KEY', '')
         
-        if not pattern_type:
-            result = {"patterns": list(PATTERNS.keys())}
-        else:
-            result = {"pattern": pattern_type, "status": "Analysis complete"}
+        # Check API key
+        api_key = self.headers.get('X-API-Key', '')
+        
+        if not api_key or api_key != GARDEN_API_KEY:
+            self.send_response(401)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "error": "Unauthorized",
+                "message": "Valid API key required"
+            }).encode())
+            return
+        
+        # Mock patterns
+        PATTERNS = {
+            "tool_cluster": "Groups of tools frequently used together",
+            "user_journey": "Common paths through GARDEN tools",
+            "cognitive_alignment": "Tools matching thinking patterns"
+        }
+        
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length) if content_length > 0 else b'{}'
+        
+        try:
+            data = json.loads(body)
+            pattern = data.get('pattern')
             
-        response.status_code = 200
-        response.headers['Content-Type'] = 'application/json'
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        return json.dumps(result)
-        
-    except Exception as e:
-        response.status_code = 500
-        return json.dumps({"error": str(e)})
+            if pattern and pattern in PATTERNS:
+                result = {
+                    "pattern": pattern,
+                    "description": PATTERNS[pattern],
+                    "status": "Analysis complete"
+                }
+            else:
+                result = {"patterns": list(PATTERNS.keys())}
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
