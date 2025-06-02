@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GARDEN Tools Service Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2A6FDB;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        button {
+            background: #2A6FDB;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #1e5bc6;
+        }
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            margin-right: 10px;
+        }
+        .status-ok {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌱 GARDEN Tools Service Test</h1>
+        
+        <div class="test-section">
+            <h2>API Status Check</h2>
+            <button onclick="testStatus()">Test Status Endpoint</button>
+            <div id="status-response" class="response"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>API Key Configuration</h2>
+            <input type="password" id="api-key" placeholder="Enter your API key">
+            <button onclick="saveApiKey()">Save API Key</button>
+            <div id="key-status"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Explorer API Tests</h2>
+            <button onclick="testExplorer('schema')">Get Schema</button>
+            <button onclick="testExplorer('node', 'contexts')">Get Node Info</button>
+            <button onclick="testExplorer('relationships')">Get Relationships</button>
+            <div id="explorer-response" class="response"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Sunflower API Tests</h2>
+            <button onclick="testSunflower()">List Patterns</button>
+            <button onclick="testSunflower('tool_cluster')">Analyze Tool Clusters</button>
+            <button onclick="testSunflower('cognitive_alignment')">Check Cognitive Alignment</button>
+            <div id="sunflower-response" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        // Base URL - update this if your deployment URL changes
+        const API_BASE = 'https://garden-tools-service.vercel.app/api';
+        
+        // Get API key from localStorage
+        let API_KEY = localStorage.getItem('garden-api-key') || '';
+        
+        // Show saved key status on load
+        window.onload = () => {
+            if (API_KEY) {
+                document.getElementById('key-status').innerHTML = 
+                    '<span class="status-ok">✓ API Key saved</span>';
+                document.getElementById('api-key').value = '••••••••';
+            }
+        };
+        
+        function saveApiKey() {
+            const key = document.getElementById('api-key').value;
+            if (key && key !== '••••••••') {
+                API_KEY = key;
+                localStorage.setItem('garden-api-key', key);
+                document.getElementById('key-status').innerHTML = 
+                    '<span class="status-ok">✓ API Key saved</span>';
+            }
+        }
+        
+        async function testStatus() {
+            const response = await fetch(`${API_BASE}/status`);
+            const data = await response.json();
+            document.getElementById('status-response').textContent = 
+                JSON.stringify(data, null, 2);
+        }
+        
+        async function testExplorer(type, node = null) {
+            try {
+                const body = { type };
+                if (node) body.node = node;
+                
+                const response = await fetch(`${API_BASE}/explorer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': API_KEY
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                const responseDiv = document.getElementById('explorer-response');
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+                responseDiv.className = response.ok ? 'response' : 'response error';
+            } catch (error) {
+                document.getElementById('explorer-response').textContent = 
+                    `Error: ${error.message}`;
+            }
+        }
+        
+        async function testSunflower(pattern = null) {
+            try {
+                const body = pattern ? { pattern } : {};
+                
+                const response = await fetch(`${API_BASE}/sunflower`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': API_KEY
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                const responseDiv = document.getElementById('sunflower-response');
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+                responseDiv.className = response.ok ? 'response' : 'response error';
+            } catch (error) {
+                document.getElementById('sunflower-response').textContent = 
+                    `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
