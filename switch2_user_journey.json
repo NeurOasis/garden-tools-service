@@ -1,0 +1,22 @@
+{
+  "pattern": "user_journey",
+  "description": "Common paths through GARDEN tools",
+  "status": "Analysis complete",
+  "optimal_journey": [
+    "calendar_analysis",
+    "location_mapping", 
+    "multi_retailer_strategy",
+    "timing_optimization",
+    "execution_protocol"
+  ],
+  "success_probability": {
+    "single_location": 0.75,
+    "multi_location": 0.95,
+    "calendar_integrated": 0.97
+  },
+  "journey_insights": {
+    "peak_efficiency": "Geographic arbitrage during existing travel",
+    "risk_mitigation": "Multiple concurrent strategies",
+    "scott_optimization": "Completion-driven execution on single day"
+  }
+}

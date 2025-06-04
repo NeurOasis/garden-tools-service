@@ -1,0 +1,16 @@
+{
+  "pattern": "cognitive_alignment",
+  "description": "Tools matching thinking patterns",
+  "status": "Analysis complete",
+  "alignment_scores": {
+    "systematic_approach": 0.95,
+    "completion_driven": 0.92,
+    "multi_option_strategy": 0.88,
+    "location_optimization": 0.85
+  },
+  "recommended_frameworks": ["Grasshopper", "Sunflower"],
+  "cognitive_patterns": {
+    "grasshopper": "Systematic hopping between optimal solutions",
+    "sunflower": "Multi-directional coverage with central coordination"
+  }
+}

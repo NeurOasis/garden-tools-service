@@ -1,0 +1,9 @@
+{
+  "message": "Received query type: node",
+  "node": "projects", 
+  "structure": {
+    "optimization_patterns": ["systematic_planning", "multi_location_strategy", "completion_driven"],
+    "dependencies": ["calendar_integration", "location_context", "personal_preferences"],
+    "success_factors": ["timing_precision", "redundant_options", "local_execution"]
+  }
+}

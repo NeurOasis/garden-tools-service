@@ -1,0 +1,16 @@
+{
+  "schema": {
+    "nodes": [
+      "contexts",
+      "toolshed",
+      "users",
+      "projects"
+    ],
+    "relationships": [
+      "CREATED",
+      "USES",
+      "DEPENDS_ON",
+      "FORKED_FROM"
+    ]
+  }
+}
